@@ -1,5 +1,4 @@
-﻿using LightsController;
-using System.Drawing;
+﻿using System.Drawing;
 
 // ReSharper disable UnusedMember.Global
 
