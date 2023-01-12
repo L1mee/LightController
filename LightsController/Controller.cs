@@ -59,7 +59,7 @@ public class Controller
         }
     }
 
-    public void Run()
+    public void Run<T>() where T : IData<byte>, IData<byte[]> //I think this way I can use T
     {
         foreach (var sender in _sender)
         {
