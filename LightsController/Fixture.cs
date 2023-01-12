@@ -14,8 +14,6 @@ public class Fixture
 
     public Dictionary<string, int>? GetChannelFunctions { get; private set; }
 
-    //Constructor chain: https://www.delftstack.com/de/howto/csharp/constructor-chaining-in-csharp/
-    //Did not use that because there might be issues with (call) order
     public Fixture(byte universe, int address, int channelCount)
     {
         DefaultFixture(universe, address, channelCount);
@@ -40,9 +38,9 @@ public class Fixture
     {
         try
         {
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions!["RED"], CorrectColor(color.R)));
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions["GREEN"], CorrectColor(color.G)));
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions["BLUE"], CorrectColor(color.B)));
+            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions!["RED"], color.R));
+            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions["GREEN"], color.G));
+            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions["BLUE"], color.B));
         }
         catch
         {
@@ -52,7 +50,7 @@ public class Fixture
 
     public void SetOrientation((float x, float y, float z) vector)
     {
-        //This depends on the fixtures real orientation
+        //This depends on the fixtures real orientation and rotation settings
 
         var pan = 0d;
         switch (vector.x)
@@ -93,7 +91,7 @@ public class Fixture
 
     public void SetOrientation(int pan, int tilt)
     {
-        //This depends on the fixtures real orientation
+        //This depends on the fixtures real orientation and rotation speed
 
         try
         {
@@ -167,11 +165,6 @@ public class Fixture
         {
             Console.WriteLine($"Couldn't set {attribute}.");
         }
-    }
-
-    private static byte CorrectColor(byte component)
-    {
-        return (byte)Math.Clamp(component, 0f, 255f);
     }
 
     private void InitFunctionsFromArray(IReadOnlyList<string> channels)
