@@ -168,7 +168,8 @@ public class Dmx : IEquatable<Dmx>
         }
     }
 
-    public static void Quit()
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Member als statisch markieren", Justification = "Method is used outside of static context.")]
+    public void Quit()
     {
         if (_serialPort != null)
         {

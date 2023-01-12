@@ -6,41 +6,171 @@ namespace LightsController;
 
 public class Fixture
 {
+    #region Variables
+
     public byte Universe;
-    public int Address;
-    public int ChannelCount;
+    private int _address;
+    public int Address
+    {
+        get => _address;
+        set
+        {
+            if (value is >= 0 and < 512)
+            {
+                _address = value;
+            }
+            else
+            {
+                Console.WriteLine($"{value} is not a valid address.");
+            }
+        }
+    }
+    private int _channelCount;
+    public int ChannelCount
+    {
+        get => _channelCount;
+        set
+        {
+            if (value is > 0 and <= 512)
+            {
+                _channelCount = value;
+            }
+            else
+            {
+                Console.WriteLine($"{value} is not a valid channel count.");
+            }
+        }
+    }
 
     private readonly Controller _console = Controller.Instance;
 
-    public Dictionary<string, int>? GetChannelFunctions { get; private set; }
+    public Dictionary<string, int>? GetChannelAttributes { get; private set; }
+
+    #region Rotation/Orientation Calculation
+
+    //Math: Map real life degrees to byte settings
+
+    //deg = possible rotation in degrees for 0b-255b (pan axis)
+    //PanDivide = deg / 255
+    //default: 540° / 255 ^= 2.11764705882
+    public double PanDivide = 2.11764705882;
+
+    //deg = possible rotation in degrees for 0b-255b (tilt axis)
+    //TiltDivide = deg / 255
+    //default: 180° / 255 ^= 0.70588235294
+    public double TiltDivide = 0.70588235294;
+
+    #endregion
+
+    #endregion
+
+    #region Constructor
 
     public Fixture(byte universe, int address, int channelCount)
     {
         DefaultFixture(universe, address, channelCount);
     }
 
-    public Fixture(byte universe, int address, IReadOnlyList<string> channelFunctions)
+    public Fixture(byte universe, int address, IReadOnlyList<string> channelAttributes)
     {
-        DefaultFixture(universe, address, channelFunctions.Count);
-        InitFunctionsFromArray(channelFunctions);
+        DefaultFixture(universe, address, channelAttributes.Count);
+        InitAttributesFromArray(channelAttributes);
     }
 
     public void DefaultFixture(byte universe, int address, int channelCount)
     {
         Universe = universe;
-        Address = address;
-        ChannelCount = channelCount;
+        _address = address;
+        _channelCount = channelCount;
 
-        GetChannelFunctions = new Dictionary<string, int>();
+        GetChannelAttributes = new Dictionary<string, int>();
     }
+
+    #endregion
+
+    #region SetChannel
+
+    public void SetChannel(int channel, byte value)
+    {
+        try
+        {
+            _console.SetChannel(Universe, (_address - 1 + channel, value));
+        }
+        catch
+        {
+            Console.WriteLine("Couldn't set Channel.");
+        }
+    }
+
+    public void SetChannels(byte[] array)
+    {
+        if (array.Length == _channelCount)
+        {
+            for (var i = 0; i < _channelCount; i++)
+            {
+                try
+                {
+                    _console.SetChannel(Universe, (_address - 1 + i, array[i]));
+                }
+                catch
+                {
+                    Console.WriteLine($"Couldn't set channel {i} to {array[i]}.");
+                }
+            }
+        }
+        else
+        {
+            Console.WriteLine("Array does not match channel count.");
+        }
+    }
+
+    #endregion
+
+    #region Attributes
+
+    public void SetAttribute(string attribute, byte value)
+    {
+        try
+        {
+            _console.SetChannel(Universe, (_address - 1 + GetChannelAttributes![attribute.ToUpper()], value));
+        }
+        catch
+        {
+            Console.WriteLine($"Couldn't set {attribute}.");
+        }
+    }
+
+    private void InitAttributesFromArray(IReadOnlyList<string> channels)
+    {
+        GetChannelAttributes = new Dictionary<string, int>();
+        for (var i = 0; i < channels.Count; i++)
+        {
+            GetChannelAttributes.Add(channels[i].ToUpper(), i);
+            Console.WriteLine($"Linked {channels[i].ToUpper()} to {i}");
+        }
+    }
+
+    public void AddAttribute(byte channel, string attribute)
+    {
+        if (channel >= GetChannelAttributes!.Count)
+        {
+            throw new Exception("Can not add attribute to channel that does not exist.");
+        }
+
+        GetChannelAttributes.Add(attribute.ToUpper(), channel);
+    }
+
+    #endregion
+
+    #region Specific Attributes
 
     public void SetColor(Color color)
     {
         try
         {
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions!["RED"], color.R));
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions["GREEN"], color.G));
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions["BLUE"], color.B));
+            _console.SetChannel(Universe, (_address - 1 + GetChannelAttributes!["RED"], color.R));
+            _console.SetChannel(Universe, (_address - 1 + GetChannelAttributes["GREEN"], color.G));
+            _console.SetChannel(Universe, (_address - 1 + GetChannelAttributes["BLUE"], color.B));
         }
         catch
         {
@@ -95,8 +225,8 @@ public class Fixture
 
         try
         {
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions!["PANRUN"], (byte)(pan / 2.11764705882)));
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions["TILTRUN"], (byte)(tilt / 0.70588235294)));
+            _console.SetChannel(Universe, (_address - 1 + GetChannelAttributes!["PANRUN"], (byte)(pan / PanDivide)));
+            _console.SetChannel(Universe, (_address - 1 + GetChannelAttributes["TILTRUN"], (byte)(tilt / TiltDivide)));
         }
         catch
         {
@@ -108,7 +238,7 @@ public class Fixture
     {
         try
         {
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions!["DIMMER"], dimmer));
+            _console.SetChannel(Universe, (_address - 1 + GetChannelAttributes!["DIMMER"], dimmer));
         }
         catch
         {
@@ -120,7 +250,7 @@ public class Fixture
     {
         try
         {
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions!["DIMMER"], strobe));
+            _console.SetChannel(Universe, (_address - 1 + GetChannelAttributes!["DIMMER"], strobe));
         }
         catch
         {
@@ -132,9 +262,9 @@ public class Fixture
     {
         try
         {
-            for (var i = 0; i < ChannelCount; i++)
+            for (var i = 0; i < _channelCount; i++)
             {
-                _console.SetChannel(Universe, (Address - 1 + i, 0));
+                _console.SetChannel(Universe, (_address - 1 + i, 0));
             }
         }
         catch
@@ -143,69 +273,5 @@ public class Fixture
         }
     }
 
-    public void SetChannel(int channel, byte value)
-    {
-        try
-        {
-            _console.SetChannel(Universe, (Address - 1 + channel, value));
-        }
-        catch
-        {
-            Console.WriteLine("Couldn't set Channel.");
-        }
-    }
-
-    public void SetAttribute(string attribute, byte value)
-    {
-        try
-        {
-            _console.SetChannel(Universe, (Address - 1 + GetChannelFunctions![attribute.ToUpper()], value));
-        }
-        catch
-        {
-            Console.WriteLine($"Couldn't set {attribute}.");
-        }
-    }
-
-    private void InitFunctionsFromArray(IReadOnlyList<string> channels)
-    {
-        GetChannelFunctions = new Dictionary<string, int>();
-        for (var i = 0; i < channels.Count; i++)
-        {
-            GetChannelFunctions.Add(channels[i].ToUpper(), i);
-            Console.WriteLine($"Linked {channels[i].ToUpper()} to {i}");
-        }
-    }
-
-    public void AddFunction(byte channel, string function)
-    {
-        if (channel >= GetChannelFunctions!.Count)
-        {
-            throw new Exception("Can not add function to channel that does not exist.");
-        }
-
-        GetChannelFunctions.Add(function.ToUpper(), channel);
-    }
-
-    public void SetChannels(byte[] array)
-    {
-        if (array.Length == ChannelCount)
-        {
-            for (int i = 0; i < ChannelCount; i++)
-            {
-                try
-                {
-                    _console.SetChannel(Universe, (Address - 1 + i, array[i]));
-                }
-                catch
-                {
-                    Console.WriteLine($"Couldn't set channel {i} to {array[i]}.");
-                }
-            }
-        }
-        else
-        {
-            Console.WriteLine("Array does not match channel count.");
-        }
-    }
+    #endregion
 }
