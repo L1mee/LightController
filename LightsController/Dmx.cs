@@ -8,14 +8,14 @@ public enum Port
     DmxPort2
 }
 
-public class Dmx : IEquatable<Dmx>
+public class Dmx : IEquatable<Dmx>, ISendMode, ISender
 {
     #region Variables
 
     //_port is mainly useful for IEquatable
     private readonly Port _port;
 
-    //SendDmx
+    //Send
     private const int DmxIndexOffset = 5;
     private readonly int _dmxMessageOverhead;
     //const indicate what Port should be send through
@@ -45,9 +45,17 @@ public class Dmx : IEquatable<Dmx>
     //TxBuffer
     private readonly byte[] _txBuffer;
 
+    public byte Universe;
+
     #endregion
 
     #region Constructor
+
+    // ReSharper disable once UnusedMember.Global
+    public Dmx(byte universe, Port port = Port.DmxPort1) : this(port)
+    {
+        Universe = universe;
+    }
 
     public Dmx(Port port = Port.DmxPort1)
     {
@@ -116,7 +124,7 @@ public class Dmx : IEquatable<Dmx>
         Console.WriteLine("Trying to set API");
     }
 
-    public void SendDmx(byte[] dmxData)
+    public void Send(byte[] dmxData)
     {
         if (_serialPort is not { IsOpen: true }) return;
 
@@ -168,7 +176,6 @@ public class Dmx : IEquatable<Dmx>
         }
     }
 
-    [System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "CA1822:Member als statisch markieren", Justification = "Method is used outside of static context.")]
     public void Quit()
     {
         if (_serialPort != null)

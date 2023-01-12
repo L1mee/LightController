@@ -68,22 +68,15 @@ public class Fixture
 
     public Fixture(byte universe, int address, int channelCount)
     {
-        DefaultFixture(universe, address, channelCount);
-    }
-
-    public Fixture(byte universe, int address, IReadOnlyList<string> channelAttributes)
-    {
-        DefaultFixture(universe, address, channelAttributes.Count);
-        InitAttributesFromArray(channelAttributes);
-    }
-
-    public void DefaultFixture(byte universe, int address, int channelCount)
-    {
         Universe = universe;
         _address = address;
         _channelCount = channelCount;
+    }
 
+    public Fixture(byte universe, int address, IReadOnlyList<string> channelAttributes) : this(universe, address, channelAttributes.Count)
+    {
         GetChannelAttributes = new Dictionary<string, int>();
+        InitAttributesFromArray(channelAttributes);
     }
 
     #endregion
