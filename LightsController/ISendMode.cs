@@ -1,9 +1,8 @@
 ﻿namespace LightsController;
 
-public interface ISendMode
+public interface ISendMode<T>
 {
-    //Type T instead of byte[] to enable ArtNet byte[][]
-    public void Send(byte[] payload);
+    public void Send(T payload);
 
     public void Quit();
 }

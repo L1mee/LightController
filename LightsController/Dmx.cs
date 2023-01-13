@@ -8,7 +8,7 @@ public enum Port
     DmxPort2
 }
 
-public class Dmx : IEquatable<Dmx>, ISendMode, ISender
+public class Dmx : IEquatable<Dmx>, ISendMode<byte[]>
 {
     #region Variables
 
@@ -154,7 +154,7 @@ public class Dmx : IEquatable<Dmx>, ISendMode, ISender
         return SerialPort.GetPortNames();
     }
 
-    public void OpenSerialPort()
+    private void OpenSerialPort()
     {
         if (_serialPort != null)
         {

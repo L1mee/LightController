@@ -1,5 +1,10 @@
-﻿using System.Timers;
+﻿using LXProtocols.ArtNet.Packets;
+using LXProtocols.ArtNet.Sockets;
+using System.Net.Sockets;
+using System.Net;
+using System.Timers;
 using Timer = System.Timers.Timer;
+using System.Net.NetworkInformation;
 // ReSharper disable UnusedMember.Global
 
 namespace LightsController;
@@ -18,8 +23,6 @@ public class Controller
     private Timer? _timer;
 
     public int SleepTime = 200;
-
-    private readonly List<ISender> _sender = new ();
 
     #endregion
 
@@ -40,18 +43,17 @@ public class Controller
     #endregion
 
     #region Sender
-    //WIP
 
-    public void SendMode(SendThrough sender)
+    public void Run(SendThrough sendMode, byte[] whatToSend)
     {
-        switch (sender)
+        switch (sendMode)
         {
             case SendThrough.Dmx:
-                _sender.Add(_dmxP1!);
-                _sender.Add(_dmxP2!);
+                if (whatToSend.Length != 2) return;
+                RunDmx(whatToSend[0], whatToSend[1]);
                 break;
             case SendThrough.ArtNet:
-                _sender.Add(new ArtNet());
+                RunArtNet(whatToSend);
                 break;
             default:
                 Console.WriteLine("Could not set mode.");
@@ -59,22 +61,36 @@ public class Controller
         }
     }
 
-    public void Run<T>() where T : IData<byte>, IData<byte[]> //I think this way I can use T
+    public void Quit(SendThrough sendMode)
     {
-        foreach (var sender in _sender)
+        switch (sendMode)
         {
-            if (sender is ISendMode sendMode)
-            {
-                if (sendMode is Dmx dmx)
-                {
-                    sendMode.Send(_data.GetUniverse(dmx.Universe));
-                }
-                else if (sendMode is ArtNet)
-                {
-                    sendMode.Send(_data.GetUniverse(1));
-                }
-            }
+            case SendThrough.Dmx:
+                StopDmx();
+                break;
+            case SendThrough.ArtNet:
+                StopArtNet();
+                break;
+            default:
+                Console.WriteLine("Could not set mode.");
+                break;
         }
+    }
+
+    #endregion
+
+    #region ArtNet
+
+    
+
+    public void RunArtNet(byte[] universes)
+    {
+        
+    }
+
+    public void StopArtNet()
+    {
+
     }
 
     #endregion
