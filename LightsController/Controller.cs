@@ -53,7 +53,7 @@ public class Controller
                 RunDmx(whatToSend[0], whatToSend[1]);
                 break;
             case SendThrough.ArtNet:
-                RunArtNet(whatToSend);
+                RunArtNet();
                 break;
             default:
                 Console.WriteLine("Could not set mode.");
@@ -81,17 +81,44 @@ public class Controller
 
     #region ArtNet
 
-    
+    private ArtNet? _artNet;
 
-    public void RunArtNet(byte[] universes)
+    public void StartArtNet()
     {
-        
+        _artNet = new ArtNet();
+    }
+
+    #region UniversesToSend
+
+    public void AddUniversesToSend(IEnumerable<byte> universes)
+    {
+        foreach (var universe in universes)
+        {
+            AddUniverseToSend(universe);
+        }
+    }
+
+    public void AddUniverseToSend(byte universe)
+    {
+        _artNet?.AddUniverseToSend(universe);
+    }
+
+    #endregion
+
+    #region Update Start Stop Run
+
+    public void RunArtNet(IEnumerable<byte>? universesToSend = null)
+    {
+        //Timer just like RunDmx
+        _artNet?.SendMultipleArtNetUniverses(universesToSend, _data);
     }
 
     public void StopArtNet()
     {
-
+        _artNet?.Quit();
     }
+
+    #endregion
 
     #endregion
 
