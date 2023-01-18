@@ -136,6 +136,8 @@ public class Controller
 
     public void SetChannel(byte universe, (int channel, byte value) input)
     {
+        if (!_data.ContainsUniverse(universe)) _data.AddUniverse(universe);
+
         _data.SetChannel(universe, input);
     }
 

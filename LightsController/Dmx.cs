@@ -45,7 +45,7 @@ public class Dmx : IEquatable<Dmx>, ISender
     //TxBuffer
     private readonly byte[] _txBuffer;
 
-    public byte Universe;
+    public byte Universe { get; set; }
 
     #endregion
 
@@ -78,13 +78,9 @@ public class Dmx : IEquatable<Dmx>, ISender
         _txBufferLength = _dmxMessageOverhead + NDmxChannels;
         _txBuffer = new byte[_dmxMessageOverhead + NDmxChannels];
 
-        Console.WriteLine("System started");
-        SerialPorts = GetPortNames();
-        OpenSerialPort();
-        InitTxBuffer();
+        SerialPorts = SerialPort.GetPortNames();
 
-        var dmxThread = new Thread(ThreadStart);
-        dmxThread.Start();
+        Console.WriteLine("System initialized");
     }
 
     #endregion
@@ -110,19 +106,7 @@ public class Dmx : IEquatable<Dmx>, ISender
 
     #endregion
 
-    #region Dmx Messages
-
-    private static void ThreadStart()
-    {
-        Console.WriteLine("Thread Start");
-
-        //extend API and enable both ports
-        if (_serialPort is not { IsOpen: true }) return;
-
-        byte[] array = { DmxProStartMsg, 13, 0xCF, 0xAA, 05, 09, DmxProEndMsg };
-        _serialPort.Write(array, 0, array.Length);
-        Console.WriteLine("Trying to set API");
-    }
+    #region ISender
 
     public void SetUniverseOut(IEnumerable<byte> universe)
     {
@@ -133,7 +117,13 @@ public class Dmx : IEquatable<Dmx>, ISender
     {
         try
         {
-            //Start Dmx
+            Console.WriteLine("System started");
+            OpenSerialPort();
+            InitTxBuffer();
+
+            var dmxThread = new Thread(ThreadStart);
+            dmxThread.Start();
+
             return true;
         }
         catch
@@ -142,35 +132,7 @@ public class Dmx : IEquatable<Dmx>, ISender
         }
     }
 
-    public void Send(Data dmxData)
-    {
-        if (_serialPort is not { IsOpen: true }) return;
-
-        Buffer.BlockCopy(dmxData.GetUniverse(Universe), 0, _txBuffer, DmxIndexOffset, NDmxChannels);
-        _serialPort.Write(_txBuffer, 0, _txBufferLength);
-        Console.WriteLine($"Sending through ThreadedIO Port {_port}.");
-    }
-
-    private void InitTxBuffer()
-    {
-        for (var i = 0; i < _txBufferLength; i++) _txBuffer[i] = 255;
-
-        _txBuffer[000] = DmxProStartMsg;
-        _txBuffer[001] = _dmxProLabelDmx;
-        _txBuffer[002] = NDmxChannels + 1 & 255;
-        _txBuffer[003] = (NDmxChannels + 1 >> 8) & 255;
-        _txBuffer[004] = DmxProStartCode;
-        _txBuffer[517] = DmxProEndMsg;
-    }
-
-    #endregion
-
-    #region Ports (Open/Close)
-
-    private static string[] GetPortNames()
-    {
-        return SerialPort.GetPortNames();
-    }
+    #region Start Helper Functions
 
     private void OpenSerialPort()
     {
@@ -192,6 +154,41 @@ public class Dmx : IEquatable<Dmx>, ISender
             Console.WriteLine(e);
             SerialPortIdx = 0;
         }
+    }
+
+    private void InitTxBuffer()
+    {
+        for (var i = 0; i < _txBufferLength; i++) _txBuffer[i] = 255;
+
+        _txBuffer[000] = DmxProStartMsg;
+        _txBuffer[001] = _dmxProLabelDmx;
+        _txBuffer[002] = NDmxChannels + 1 & 255;
+        _txBuffer[003] = (NDmxChannels + 1 >> 8) & 255;
+        _txBuffer[004] = DmxProStartCode;
+        _txBuffer[517] = DmxProEndMsg;
+    }
+
+    private static void ThreadStart()
+    {
+        Console.WriteLine("Thread Start");
+
+        //extend API and enable both ports
+        if (_serialPort is not { IsOpen: true }) return;
+
+        byte[] array = { DmxProStartMsg, 13, 0xCF, 0xAA, 05, 09, DmxProEndMsg };
+        _serialPort.Write(array, 0, array.Length);
+        Console.WriteLine("Trying to set API");
+    }
+
+    #endregion
+
+    public void Send(Data dmxData)
+    {
+        if (_serialPort is not { IsOpen: true }) return;
+
+        Buffer.BlockCopy(dmxData.GetUniverse(Universe), 0, _txBuffer, DmxIndexOffset, NDmxChannels);
+        _serialPort.Write(_txBuffer, 0, _txBufferLength);
+        Console.WriteLine($"Sending through ThreadedIO Port {_port}.");
     }
 
     public void Quit()

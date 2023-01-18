@@ -8,24 +8,114 @@ namespace LightsController;
 
 public class ArtNet : ISender
 {
-    public void Send(Data data)
-    {
-        //make ArtNet Packet and call Send via IO
-        throw new NotImplementedException();
-    }
+    #region Variables
 
-    public void Quit()
-    {
-        //close ArtNet IO
-        throw new NotImplementedException();
-    }
-
-    #region CopyPaste
-
-    private readonly ArtNetDmxPacket _dmxToSend = new();
+    private readonly ArtNetDmxPacket _artNetDmxPacket = new();
     private ArtNetSocket? _artNet;
 
     private readonly List<byte> _universesToSend = new();
+
+    #endregion
+
+    #region Constructor
+
+    public ArtNet(IEnumerable<byte>? universes = null)
+    {
+        if (universes == null) return;
+
+        SetUniverseOut(universes);
+    }
+
+    #endregion
+
+    #region ISender
+
+    public void SetUniverseOut(IEnumerable<byte> universes)
+    {
+        _universesToSend.Clear();
+        foreach (var b in universes) _universesToSend.Add(b);
+    }
+
+    public bool Start()
+    {
+        try
+        {
+            _artNet?.Close();
+            _artNet = new ArtNetSocket(UId.Empty);
+            var ip = GetLocalIP();
+            _artNetDmxPacket.DmxData = new byte[512];
+            _artNet.Open(ip, null);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    #region Start Helper Functions
+
+    private static IPAddress GetLocalIP()
+    {
+        var address = IPAddress.None;
+
+        var hostName = Dns.GetHostName();
+
+        try
+        {
+            var localHost = Dns.GetHostEntry(hostName);
+            foreach (var item in localHost.AddressList)
+            {
+                if (item.AddressFamily != AddressFamily.InterNetwork) continue;
+                address = item;
+                break;
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Failed to find IP for :\n host name = {0}\n exception={1}", hostName, e);
+        }
+
+        return address;
+    }
+
+    #endregion
+
+    public void Send(Data data)
+    {
+        foreach (var b in _universesToSend)
+        {
+            try
+            {
+                UpdateArtNet(b, data.GetUniverse(b));
+            }
+            catch
+            {
+                Console.WriteLine($"Could not send universe {b}.");
+            }
+        }
+    }
+
+    #region Send Helper Functions
+
+    private void UpdateArtNet(byte universe, byte[] universeData)
+    {
+        _artNetDmxPacket.Universe = universe;
+        Buffer.BlockCopy(universeData, 0, _artNetDmxPacket.DmxData, 0, universeData.Length);
+        _artNet!.Send(_artNetDmxPacket);
+    }
+
+    #endregion
+
+    public void Quit()
+    {
+        _artNet?.Close();
+        Console.WriteLine("ArtNet socket closed");
+    }
+
+    #endregion
+
+    #region Universes to Send
 
     public void AddUniverseToSend(byte b)
     {
@@ -47,86 +137,26 @@ public class ArtNet : ISender
         _universesToSend.Remove(b);
     }
 
-    public bool Start()
-    {
-        try
-        {
-            _artNet?.Close();
-            _artNet = new ArtNetSocket(UId.Empty);
-            var ip = GetLocalIP();
-            _dmxToSend.DmxData = new byte[512];
-            _artNet.Open(ip, null);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    public void SendData(Data data)
-    {
-        foreach (var b in _universesToSend)
-        {
-            try
-            {
-                UpdateArtNet(b, data.GetUniverse(b));
-            }
-            catch
-            {
-                Console.WriteLine($"Could not send universe {b}.");
-            }
-        }
-    }
-
-    public void SetUniverseOut(IEnumerable<byte> universes)
+    public void SetUniversesToSend(IEnumerable<byte> universesToSend)
     {
         _universesToSend.Clear();
-        foreach (var b in universes) _universesToSend.Add(b);
-    }
-
-    public void SendMultipleArtNetUniverses(IEnumerable<byte>? universesToSend, Data data)
-    {
-        if (universesToSend != null)
-        {
-            _universesToSend.Clear();
-            foreach (var b in universesToSend) _universesToSend.Add(b);
-        }
-        SendData(data);
-    }
-
-    public void UpdateArtNet(byte universe, byte[] universeData)
-    {
-        _dmxToSend.Universe = universe;
-        Buffer.BlockCopy(universeData, 0, _dmxToSend.DmxData, 0, universeData.Length);
-        _artNet!.Send(_dmxToSend);
-    }
-
-    private static IPAddress GetLocalIP()
-    {
-        var address = IPAddress.None;
-
-        var hostName = Dns.GetHostName();
-
-        try
-        {
-            IPHostEntry localHost = Dns.GetHostEntry(hostName);
-            foreach (var item in localHost.AddressList)
-            {
-                if (item.AddressFamily != AddressFamily.InterNetwork) continue;
-                address = item;
-                break;
-            }
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine("Failed to find IP for :\n host name = {0}\n exception={1}", hostName, e);
-        }
-
-        return address;
+        foreach (var b in universesToSend) _universesToSend.Add(b);
     }
 
     #endregion
+
+    //Trash
+    #region Outdated
+
+    //public void SendMultipleArtNetUniverses(IEnumerable<byte>? universesToSend, Data data)
+    //{
+    //    if (universesToSend != null)
+    //    {
+    //        _universesToSend.Clear();
+    //        foreach (var b in universesToSend) _universesToSend.Add(b);
+    //    }
+    //    Send(data);
+    //}
 
     #region Kommentare
 
@@ -225,6 +255,8 @@ public class ArtNet : ISender
 
     //    return net?.GetPhysicalAddress().GetAddressBytes();
     //}
+
+    #endregion
 
     #endregion
 }
