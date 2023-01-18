@@ -76,5 +76,21 @@ public readonly struct Data
         return _universes.ContainsKey(universe);
     }
 
+    public void ResetUniverse(byte universe)
+    {
+        for (var i = 0; i < Length; i++)
+        {
+            _universes[universe][i] = 0;
+        }
+    }
+
+    public void BlackOut()
+    {
+        foreach (var key in _universes.Keys)
+        {
+            ResetUniverse(key);
+        }
+    }
+
     #endregion
 }

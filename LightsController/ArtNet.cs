@@ -6,7 +6,7 @@ using LXProtocols.Acn.Rdm;
 
 namespace LightsController;
 
-public class ArtNet : ISendMode<Data>
+public class ArtNet : ISender
 {
     public void Send(Data data)
     {
@@ -47,13 +47,21 @@ public class ArtNet : ISendMode<Data>
         _universesToSend.Remove(b);
     }
 
-    public void Start()
+    public bool Start()
     {
-        _artNet?.Close();
-        _artNet = new ArtNetSocket(UId.Empty);
-        var ip = GetLocalIP();
-        _dmxToSend.DmxData = new byte[512];
-        _artNet.Open(ip, null);
+        try
+        {
+            _artNet?.Close();
+            _artNet = new ArtNetSocket(UId.Empty);
+            var ip = GetLocalIP();
+            _dmxToSend.DmxData = new byte[512];
+            _artNet.Open(ip, null);
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public void SendData(Data data)
@@ -69,6 +77,12 @@ public class ArtNet : ISendMode<Data>
                 Console.WriteLine($"Could not send universe {b}.");
             }
         }
+    }
+
+    public void SetUniverseOut(IEnumerable<byte> universes)
+    {
+        _universesToSend.Clear();
+        foreach (var b in universes) _universesToSend.Add(b);
     }
 
     public void SendMultipleArtNetUniverses(IEnumerable<byte>? universesToSend, Data data)

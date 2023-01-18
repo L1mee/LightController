@@ -8,7 +8,7 @@ public enum Port
     DmxPort2
 }
 
-public class Dmx : IEquatable<Dmx>, ISendMode<byte[]>
+public class Dmx : IEquatable<Dmx>, ISender
 {
     #region Variables
 
@@ -124,11 +124,29 @@ public class Dmx : IEquatable<Dmx>, ISendMode<byte[]>
         Console.WriteLine("Trying to set API");
     }
 
-    public void Send(byte[] dmxData)
+    public void SetUniverseOut(IEnumerable<byte> universe)
+    {
+        Universe = universe.First();
+    }
+
+    public bool Start()
+    {
+        try
+        {
+            //Start Dmx
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public void Send(Data dmxData)
     {
         if (_serialPort is not { IsOpen: true }) return;
 
-        Buffer.BlockCopy(dmxData, 0, _txBuffer, DmxIndexOffset, NDmxChannels);
+        Buffer.BlockCopy(dmxData.GetUniverse(Universe), 0, _txBuffer, DmxIndexOffset, NDmxChannels);
         _serialPort.Write(_txBuffer, 0, _txBufferLength);
         Console.WriteLine($"Sending through ThreadedIO Port {_port}.");
     }
