@@ -68,6 +68,7 @@ public class Controller
         {
             case SendThrough.Dmx:
             {
+                Console.WriteLine("Before using DMX:\nRun DMX Pro Manager -> Exit -> Run Program");
                 // ReSharper disable once RedundantArgumentDefaultValue
                 var dmxP1 = new Dmx(Port.DmxPort1);
                 var dmxP2 = new Dmx(Port.DmxPort2);
