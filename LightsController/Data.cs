@@ -14,18 +14,6 @@ public readonly struct Data
         _universes = new Dictionary<byte, byte[]>();
     }
 
-    //for now this is useless, just more constructors with more options
-    //public Data(Dictionary<byte, byte[]> universes)
-    //{
-    //    _universes = universes;
-    //}
-
-    //public Data(byte universe, byte[] channels)
-    //{
-    //    _universes = new Dictionary<byte, byte[]>();
-    //    AddUniverse(universe, channels);
-    //}
-
     #endregion
 
     #region DictionaryAccess
