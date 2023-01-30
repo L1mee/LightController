@@ -1,8 +1,9 @@
 ﻿using System.Drawing;
+using System.Linq;
 
 // ReSharper disable UnusedMember.Global
 
-namespace LightsController;
+namespace LightController;
 
 public class Fixture
 {
@@ -73,7 +74,7 @@ public class Fixture
         _channelCount = channelCount;
     }
 
-    public Fixture(byte universe, int address, IReadOnlyList<string> channelAttributes) : this(universe, address, channelAttributes.Count)
+    public Fixture(byte universe, int address, IEnumerable<string> channelAttributes) : this(universe, address, channelAttributes.Count())
     {
         GetChannelAttributes = new Dictionary<string, int>();
         InitAttributesFromArray(channelAttributes);
@@ -133,13 +134,14 @@ public class Fixture
         }
     }
 
-    private void InitAttributesFromArray(IReadOnlyList<string> channels)
+    private void InitAttributesFromArray(IEnumerable<string> channels)
     {
         GetChannelAttributes = new Dictionary<string, int>();
-        for (var i = 0; i < channels.Count; i++)
+        var enumerable = channels as string[] ?? channels.ToArray();
+        for (var i = 0; i < enumerable.Length; i++)
         {
-            GetChannelAttributes.Add(channels[i].ToUpper(), i);
-            Console.WriteLine($"Linked {channels[i].ToUpper()} to {i}");
+            GetChannelAttributes.Add(enumerable[i].ToUpper(), i);
+            Console.WriteLine($"Linked {enumerable[i].ToUpper()} to {i}");
         }
     }
 

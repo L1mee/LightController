@@ -1,6 +1,6 @@
 ﻿using System.IO.Ports;
 
-namespace LightsController;
+namespace LightController;
 
 public enum Port
 {

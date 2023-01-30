@@ -1,7 +1,7 @@
 ﻿// ReSharper disable RedundantUsingDirective
 using System.Drawing;
 
-namespace LightsController;
+namespace LightController;
 
 internal class Program
 {

@@ -1,6 +1,6 @@
 ﻿// ReSharper disable UnusedMember.Global
 
-namespace LightsController;
+namespace LightController;
 
 public readonly struct Data
 {

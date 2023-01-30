@@ -2,7 +2,7 @@
 using Timer = System.Timers.Timer;
 // ReSharper disable UnusedMember.Global
 
-namespace LightsController;
+namespace LightController;
 
 public enum SendThrough
 {

@@ -1,4 +1,4 @@
-﻿namespace LightsController;
+﻿namespace LightController;
 
 public interface ISender
 {

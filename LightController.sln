@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LightsController", "LightsController\LightsController.csproj", "{3B76D614-A38C-462D-B0B4-7A5A46E0A283}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LightController", "LightsController\LightController.csproj", "{3B76D614-A38C-462D-B0B4-7A5A46E0A283}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -5,7 +5,7 @@ using System.Net;
 using LXProtocols.Acn.Rdm;
 // ReSharper disable UnusedMember.Global
 
-namespace LightsController;
+namespace LightController;
 
 public class ArtNet : ISender
 {
